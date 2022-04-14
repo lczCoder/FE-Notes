@@ -68,3 +68,105 @@ Docker 官方中国区：https://registry.docker-cn.com
 中国科技大学：https://docker.mirrors.ustc.edu.cn
 
 阿里云：https://y0qd3iq.mirror.aliyuncs.com
+
+
+
+window/mac 安装
+
+Docker Desktop 桌面端安装，可视化docker工具，会自动安装docker 环境
+
+
+
+
+
+
+
+### 拉取一个镜像
+
+docker pull  <镜像名称>:<版本号> `latest 最新`
+
+
+
+### 根据一个镜像文件启动一个容器
+
+docker run -itd --name=<容器名称> -p <宿主端口:docker端口> <镜像名称>
+
+
+
+### 删除镜像
+
+docker rmi <镜像名称 | 镜像id>
+
+
+
+### 删除容器
+
+docker rm <容器名称 | 容器id>
+
+
+
+### 查看本地镜像
+
+docker images
+
+
+
+### 查看本地所有容器/已开启容器
+
+docker ps  /  docker ps -a
+
+### 
+
+### 容器重命名
+
+docker rename <容器当前名称 | 容器id> <容器新名称>
+
+
+
+### 镜像重命名
+
+docker tag <旧镜像名称 | 镜像id> <新镜像名称>
+镜像重命名不会修改旧镜像，而是基于旧镜像复制了一个镜像，2个镜像id相同，名称不同
+如果只是想重命名，就删除旧镜像
+
+### 
+
+### 启动容器
+
+docker start <容器名称 | 容器id >
+
+
+
+### 关闭容器
+
+docker stop <容器名称 | 容器id>
+
+
+
+### 重启容器
+
+docker restart <容器名>
+
+
+
+### 进入容器
+
+docker exec -it <容器名称 | 容器id> /bin/sh
+
+ 
+
+### 退出容器
+
+exit
+
+
+
+#### 通过 dockerfILE  创建dockerrongqi1 
+
+ docker build -f </指向dockerfile文件路径>
+
+
+
+
+
+### Linux 安装插件 apk add <插件名称>:<版本号>

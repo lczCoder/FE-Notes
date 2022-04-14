@@ -161,6 +161,24 @@ exit
 
 
 
+### 关闭docker服务（关闭服务会关闭所有正在运行的容器）
+
+service dockert stop
+
+
+
+### 开启docker服务
+
+service docker start
+
+
+
+### 重启docker服务（重启服务会关闭所有正在运行的容器）
+
+service docker restart
+
+
+
 #### 通过 dockerfILE  创建dockerrongqi1 
 
  docker build -f </指向dockerfile文件路径>

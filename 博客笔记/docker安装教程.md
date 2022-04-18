@@ -232,6 +232,24 @@ docker load < <镜像名称.tar>
 
 
 
+### 数据卷挂载
+
+doucker run -it -v <宿主机绝对路径>:<docker容器绝对路径>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

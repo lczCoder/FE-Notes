@@ -252,14 +252,18 @@ doucker run -it -v <宿主机绝对路径>:<docker容器绝对路径>
 
 
 
-
-
-
-
 #### 通过 dockerfIle  创建docker容器
 
  docker build -f </指向dockerfile文件路径>
 
 
 
-### Linux 安装插件 apk add <插件名称>:<版本号>
+### Linux 安装插件 apk add <插件名称>:<版本号
+
+
+
+### vscode插件
+
+Docker
+
+Remote - Containers

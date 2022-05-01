@@ -267,3 +267,7 @@ doucker run -it -v <宿主机绝对路径>:<docker容器绝对路径>
 Docker
 
 Remote - Containers
+
+
+
+用dk集成前端开发环境，让新同事5分钟上手开发项目

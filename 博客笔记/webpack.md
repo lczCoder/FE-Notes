@@ -652,3 +652,261 @@ webpack打包，依赖于**ejs模板引擎**
   }
 }
 ```
+
+### 多页面打包配置
+
+**核心插件：（golb，HtmlWebpackPlugin）**
+
+```javascript
+export modules = {
+  // 单页面入口
+  entry:'./src/home/index.js',
+  plugins:[
+    new HtmlWebpackPlugin({
+      template:path.join(__dirname,'src/index.html'),
+      filename:'index.html'
+    })
+  ]
+}
+
+// 不友好的方法
+export modules = {
+  // 多页面入口
+  entry:{
+    page1: './src/page1/index.js',
+    page2: './src/page2/index.js',
+  },
+  output:{
+    filename:'[name].js',
+    path:path.join(__dirname,'dist)
+  },
+  plugins:[
+     new HtmlWebpackPlugin({
+      template:path.join(__dirname,`src/page1/index.html`),
+      filename:'page1.html'
+    }),
+      new HtmlWebpackPlugin({
+      template:path.join(__dirname,`src/page2/index.html`),
+      filename:'page2.html'
+    })
+  ]
+}
+
+// 更好的方法
+
+// 封装一个函数方法 返回2个值  1、遍历后多页面 2、webpack
+const fn = ()=>{
+  let entry = {}
+  let webpackPlugin = []
+  const enrtyPage = glob.sync(path.join(__dirname,'./src/*/index.js'))
+  Object.keys(enrtyPage).map(()=>{
+    // 遍历获取对应多页面的pageinfo 文件夹名称和路径
+    webpackPlugin.push(
+     new HtmlWebpackPlugin({
+          template:path.join(__dirname,`src/${pageName}/index.html`),
+          filename:`${pageName}.html`
+        }),
+    )
+  })
+  return {
+    entry, 
+    /**
+      {
+        page1:'./src/page1/index.js',
+        page2:'./src/page2/index.js',
+        
+      }
+    */
+    webpackPlugin
+    /**
+      [
+        new HtmlWebpackPlugin({
+        template:path.join(__dirname,`src/page1/index.html`),
+        filename:'page1.html'
+      }),
+        new HtmlWebpackPlugin({
+        template:path.join(__dirname,`src/page2/index.html`),
+        filename:'page2.html'
+      })
+      ]
+    */
+  }
+}
+
+const {entry,webpackPlugin} = fn()
+
+export modules = {
+  enrty : entry,
+  plugins:[].catch(webpackPlugin)
+  
+}
+```
+
+### SourceMap
+
+优点：在开发环境打开sourcemap可以方便进行代码的断点调试，定位到错误发生的行和列
+
+缺点：增加打包时间，并且会暴露源代码，生产环境最好关闭sourcemap
+
+| 关键词     | 含义                           |
+| ---------- | ------------------------------ |
+| eval       | 使用eval函数包裹代码           |
+| source map | 产生独立的.map文件             |
+| cheap      | source 不包含列信息            |
+| inline     | 不单独生成.map，和js打包到一起 |
+| module     | 包含loader                     |
+
+常用的source map devtools类型 就是上面5种类型的排列组合
+
+常见的几种模式：**eval**、**cheap-eval-source-map**、**liline-source-map**、**source-map**、**none**……
+
+**使用方式：**
+
+```javascript
+export modules = {
+  devtool:'source-map'
+}
+```
+
+### 公共资源，库抽离
+
+**核心插件：（html-webpack-externals-plugin、SplitChunksPlugin(webpack4内置插件)）**
+
+```javascript
+export modules = {
+  plugins:[
+    new HtmlWebpackExternalsPlugin({
+      externals:[
+        {
+          module:'react',
+          entry:'https://cdn.bootcdn.net/ajax/libs/react/18.2.0/cjs/react-jsx-dev-runtime.development.js' // cdn 地址
+          global:'React'
+        },
+        {
+          module:'react-dom',
+          entry:'https://cdn.bootcdn.net/ajax/libs/react-dom/18.2.0/cjs/react-dom-server-legacy.browser.development.js' // cdn 地址
+          global:'ReactDom'
+        }
+      ]
+    })
+  ]
+}
+
+// index.html
+<heade>
+  <script	src='https://cdn.bootcdn.net/ajax/libs/react/18.2.0/cjs/react-jsx-dev-runtime.development.js'></script>
+  <script	src='https://cdn.bootcdn.net/ajax/libs/react-dom/18.2.0/cjs/react-dom-server-legacy.browser.development.js'></script>
+</heade>
+```
+
+### Tree Shaking 
+
+**tree shaking是啥：**一种打包机制，在编译阶段，知道哪些代码是无用代码，无用代码不会进行打包，在uglify阶段自动删除。
+
+**无用代码定义：**
+
+**1、代码永远不会被执行** 
+
+**2、代码执行结果不会被使用**
+
+**3、没有被使用的变量、方法、模块**
+
+**使用条件：**必须使用ES6 import的导入导出方式，commonjs方式tree shaking会失效
+
+**开启条件：**webpack中在.babelrc中设置modules:false 或者设置mode=production自动开启
+
+**原因：**
+
+**1、ES6 只能作用在模块的最顶层  （require 可以作用在任何地方）**
+
+**2、导出的都是模块都是常量	（require 可以根据条件动态导入导出）**
+
+**总结：使用tree shaking 代码必须在编译阶段就确定对应关系，不能到了运行阶段来判断**
+
+
+
+### Scope Hoisting
+
+**使用条件：**必须使用ES6 import的导入导出方式，commonjs方式失效
+
+**开启条件：**webpack mode设置为production 自动开启
+
+**核心插件：**（webpack.optimize.ModuleConcatenationPlugin）
+
+
+
+### 代码分割
+
+将所有模块打包到一个js文件里显然是不合理的行为，会导致单个js文件过大，加载较慢
+
+可以把非立即执行的代码块，和多模块的公共代码块进行chunk分割，当代码运行需要的时候再进行加载。
+
+优点：
+
+1、抽离相同的代码到一个chunk中
+
+2、实现脚本懒加载，初始加载速度提升
+
+CommonJs：require.ensure
+
+ES6：动态import
+
+**核心插件：（@/babel/plugin-syntax-dynamic-import）**
+
+```javascript
+// .babelrc 
+
+{
+  "plugins":[
+    "@/babel/plugin-syntax-dynamic-import"
+  ]
+}
+```
+
+
+
+### ESLint ⭐️⭐️
+
+
+
+### 命令行输出内容优化
+
+开发者对构建，并不在乎构建过程中的日志信息，更多是关心构建是否成功，是否有error或warning的情况和对应的原因
+
+| 配置项      | 描述                         |
+| ----------- | ---------------------------- |
+| errors-only | 只有发生错误才输出           |
+| minimal     | 只有发生错误或有新编译才输出 |
+| none        | 没有任何输出                 |
+| normal      | 标准输出（默认）             |
+| verbose     | 全部输出                     |
+
+```javascript
+// 开发配置
+export modules = {
+  devtool:{
+    stats: 'errors-only'
+  }
+}
+
+// 生产环境
+export modules = {
+  stats: 'errors-only'
+}
+```
+
+也可以借助一些插件来进行显眼的提示
+
+**核心插件：（friendly-errors-webpack-plugin）**
+
+**stats 设置 errors-only**
+
+```javascript
+export modules = {
+  plugins:[
+    new FriendlyErrorWebpackPlugin()
+  ]
+}
+```
+
+### 构建异常中断处理

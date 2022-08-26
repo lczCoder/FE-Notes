@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // // 结果加2
+      const addTwo = (num) => {
+        return num + 2;
+      };
+      // 结果减1
+      const reduceOne = (num) => {
+        return num - 1;
+      };
+      // 结果*10
+      const takeTen = (num) => {
+        return num * 10;
+      };
+
+      // const source = 10;
+
+      // // 优化后的compose函数
+      // const compose = (...fn) => {
+      //   if (fn.length === 0) {
+      //     return source;
+      //   }
+      //   fn.forEach((item) => {
+      //     if (typeof item !== "function") {
+      //       console.error("compose方法传入的参数必须是function类型");
+      //     }
+      //   });
+      //   if (fn.length == 1) {
+      //     return fn[0];
+      //   }
+      //   return fn.reduce(
+      //     // (fn1, fn2) =>
+      //     //   (...source) =>
+      //     //     fn1(fn2(...source))
+      // 1, fn2) => console.log(`
+      //      ${fn1 || 'xxx'},
+      //      ${fn2 || 'yyy'}`)     (fn
+      //   );
+      // };
+
+      // const result = compose(addTwo, reduceOne, takeTen)(source); // 101
+      // console.log(result);
+
+       let zz =  [1,2,3,4].reduce((old,cur)=>{
+          console.log(old,cur);
+          return old+cur
+        })
+        console.log(zz);
+
+      const ary  = [addTwo,reduceOne,takeTen]
+      let x = ary.reduce((oldV, newV) => {
+        console.log(oldV,newV);
+        return ()=>{
+          oldV(newV())
+        }
+      });
+
+      console.log('x',x);
+    </script>
+  </body>
+</html>

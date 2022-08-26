@@ -538,9 +538,9 @@ plugins:[
 
 ```javascript
 module.exports = {
-plugins:[
-  new CleanWebpackPlugin() // 清理构建输出目录
-]
+  plugins:[
+    new CleanWebpackPlugin() // 清理构建输出目录
+  ]
 }
 ```
 
@@ -658,7 +658,7 @@ webpack打包，依赖于**ejs模板引擎**
 **核心插件：（golb，HtmlWebpackPlugin）**
 
 ```javascript
-export modules = {
+modules.export = {
   // 单页面入口
   entry:'./src/home/index.js',
   plugins:[
@@ -670,7 +670,7 @@ export modules = {
 }
 
 // 不友好的方法
-export modules = {
+modules.export = {
   // 多页面入口
   entry:{
     page1: './src/page1/index.js',
@@ -735,7 +735,7 @@ const fn = ()=>{
 
 const {entry,webpackPlugin} = fn()
 
-export modules = {
+modules.export = {
   enrty : entry,
   plugins:[].catch(webpackPlugin)
   
@@ -763,7 +763,7 @@ export modules = {
 **使用方式：**
 
 ```javascript
-export modules = {
+modules.export = {
   devtool:'source-map'
 }
 ```
@@ -773,7 +773,7 @@ export modules = {
 **核心插件：（html-webpack-externals-plugin、SplitChunksPlugin(webpack4内置插件)）**
 
 ```javascript
-export modules = {
+modules.export = {
   plugins:[
     new HtmlWebpackExternalsPlugin({
       externals:[
@@ -883,7 +883,7 @@ ES6：动态import
 
 ```javascript
 // 开发配置
-export modules = {
+modules.export = {
   devtool:{
     stats: 'errors-only'
   }
@@ -902,7 +902,7 @@ export modules = {
 **stats 设置 errors-only**
 
 ```javascript
-export modules = {
+modules.export = {
   plugins:[
     new FriendlyErrorWebpackPlugin()
   ]
@@ -910,3 +910,24 @@ export modules = {
 ```
 
 ### 构建异常中断处理
+
+在webpack早期版本中需要手动去捕获构建的一个结果进行后续处理，
+
+webpack4之后已经帮我们自动完成了这一操作
+
+```javascript
+modules.export = {
+  plugins:[
+    function(){
+      this.hooks.done.tap('done',(stats)=>{
+        if(stats.compilation.errors 
+           && stats.compilation.errors.length 
+           && process.argv.indexOf('--watch')===-1){
+          //  process.exit(1)  webpack4版本之前 要手动触发process.exit()抛出错误
+          // todo something 错误上报等操作
+        }
+      })
+    }
+  ]
+}
+```

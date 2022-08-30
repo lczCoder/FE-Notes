@@ -128,22 +128,6 @@ return fn.reduce((fn1, fn2) => (...source) => fn1(fn2(...source)));
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```javascript
 // loaderA
 function loaderA(code){
@@ -166,3 +150,243 @@ let newSource =  initLoader('hello')
 
 console.log(newSource);  // hello-loaderB-loaderA
 ```
+
+
+
+### 3、loader-runner
+
+
+
+loader-runner作为webpack的一个依赖，webpack使用loader-runner进行loader的执行。
+
+loader-runner可以在不安装webpack的环境下，进行loader的运行和调试，方便自定义loader的开发。
+
+```javascript
+const {runLoaders} = require('loader-runner')
+const path = require('path')
+const fs = require('fs')
+
+runLoaders({
+  resource:'' // 需要进行loader处理的文件
+  loaders:[ // 用来处理的loader
+    '', // loader1
+    '', // loader2
+  ],
+  context:{ // loader上下文
+     minisize:true 
+  },
+  readResource:fs.readFile.bind(fs) // loader解析文件的方法
+},(err,res)=>{
+   // err 错误信息
+   // res 处理结果
+})
+```
+
+实现一个简单的raw-loader的小demo
+
+```javascript
+// demo.txt
+hi this is row-loader
+
+// raw-loader.js
+module.exports = function(source){
+  const json = JSON.stringify(source)
+                    .replace(/\u2028/g,'\\u2028')
+                    .replace(/\u2029/g,'\\u2029')
+                    .replace(/\hi/g,'hello')
+  return `export default ${json}`
+}
+
+// index.js
+const path = require("path");
+const { runLoaders } = require("loader-runner");
+const fs = require("fs");
+
+runLoaders(
+  {
+    resource: path.join(__dirname, "./test.txt"),
+    loaders: [path.join(__dirname, "./loaders/raw-loader.js")],
+    context: {
+      minimize: true,
+    },
+    readResource: fs.readFile.bind(fs),
+  },
+  (err, result) => {
+    err ? console.log(err) : console.log(result);
+  }
+);
+
+/**
+{
+  result: [ 'export default "hello thellos is row-loader"' ],
+  resourceBuffer: <Buffer 68 69 20 74 68 69 73 20 69 73 20 72 6f 77 2d 6c 6f 61 64 65 72>,
+  cacheable: true,
+  fileDependencies: [ '/Users/linchengzhe/demoDevelop/webpack/loader/src/test.txt' ],
+  contextDependencies: [],
+  missingDependencies: []
+}
+**/
+```
+
+
+
+### loader的高级方法使用
+
+#### 1、loader配置参数的获取
+
+在loader中可以获取options中的配置项来进行不同的处理。使用方法如下
+
+```javascript
+// index.js
+runLoaders(
+  {
+    resource: path.join(__dirname, "./test.txt"),
+    loaders: [
+      {
+        loader: path.join(__dirname, "./loaders/raw-loader.js"),
+        options: {
+          name:'test',
+          update: true
+        }
+      }],
+    context: {
+      minimize: true,
+    },
+    readResource: fs.readFile.bind(fs),
+  },
+  (err, result) => {
+    err ? console.log(err) : console.log(result);
+  }
+);
+
+// raw-loader.js
+const {getOptions} = require("loader-utils");
+
+module.exports = function (source) {
+  
+  const options = getOptions(this);
+  console.log(options); // { name: 'test', update: true }
+  
+  const json = JSON.stringify(source)
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
+    .replace(/\hi/g, "hello");
+  return `export default ${json}`;
+};
+```
+
+❗️ 在新版本的loader-utils中，已经移除了getOptions方法，如果需要使用请降低loader-utils的版本，或者使用`this.query`来解构配置参数。
+
+
+
+#### 2、loader解析异常处理
+
+在loader解析中，如果发生了错误，需要把错误抛出，这里需要了解一个方法**this.callback( )**
+
+```javascript
+this.callback(
+  err: Error | null, // error,如果返回结果则为null
+  content: string | Buffer, // 返回的内容
+  sourceMap?: SourceMap, // 可以被解析的source-map文件
+  meta?: any // 需要被webpack忽略的元数据
+);
+```
+
+**第一种方法：this.callback( )**
+
+```javascript
+this.callback(
+  new Error('error is happen'),
+)
+```
+
+**第二种方法：直接throw Error ( )**
+
+```javascript
+throw Error('loader 解析发生错误')
+```
+
+**this.callback也可以直接用于结果的返回从而替换return**
+
+```javascript
+module.exports = function (source) {
+  
+  const json = JSON.stringify(source)
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
+    .replace(/\hi/g, "hello");
+  
+  this.callback(null,json)
+};
+```
+
+#### 3、异步loader处理
+
+**对于异步 loader，使用 this.async 来获取 callback 函数：**
+
+**结合上述例子进行修改**
+
+```javascript
+const path = require("path");
+const fs = require("fs");
+
+module.exports = function (source) {
+  let callback = this.async();
+  const json = JSON.stringify(source)
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
+    .replace(/\hi/g, "hello");
+
+  fs.readFile(path.resolve("src", "async.txt"), "utf-8", (err, content) => {
+    if (err) {
+      console.log("err", err);
+    } else {
+      callback(null, `${content} + ${json}`);
+    }
+  });
+};
+
+/**
+{
+  result: [ 'async text + "hello thellos is row-loader"' ],
+  resourceBuffer: <Buffer 68 69 20 74 68 69 73 20 69 73 20 72 6f 77 2d 6c 6f 61 64 65 72>,
+  cacheable: true,
+  fileDependencies: [ '/Users/linchengzhe/demoDevelop/webpack/loader/src/test.txt' ],
+  contextDependencies: [],
+  missingDependencies: []
+}
+**/
+```
+
+#### 4、loader缓存策略
+
+loader默认是开启缓存策略的，也可以通过this.cacheable( ) 来手动进行设置
+
+有依赖的loader无法使用缓存策略，使用缓存策略的前提是保证输入输出的一致性
+
+
+
+#### 5、loader内容输出（output）
+
+使用this.emitFile api进行文件的写入
+
+```javascript
+const loaderUtils = require('loader-utils')
+module.exports = fuction(source){
+  const url = loaderUtils.interpolateName(this,"[hash].[ext]",{
+    source
+  })
+  
+  this.emitFile(url,source)
+  const path = `__webpack_public_path__ + ${JSON.stringify(url)}`
+  return `export default ${path}`
+}
+```
+
+
+
+
+
+参考文档
+
+https://zhuanlan.zhihu.com/p/104205895

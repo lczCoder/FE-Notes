@@ -162,11 +162,36 @@ class Dog extends Animal {
 
 
 
+;(function(){
+  class Person {
+    constructor(){
+
+    }
+    sleep(){
+      return this
+    }
+    run(){
+      return this
+    }
+  }
+  const per = new Person()
+  per.sleep().run()
+
+  class Stu extends Person{
+    say(){
+      return this
+    }
+  }
+
+  const stu = new Stu()
+  stu.run().say().sleep()
+
+})
 
 
 
 /**
- * ts在class中提供了3个修饰符
+ * ts在class中提供了6个修饰符
  * 1、public 公共，class中的属性和方法默认都是public 可被子类继承和实例化，（可以被修改）
  * 2、private 私有 给constructor 加上private属性，这个类不能被实例化，也不能被继承
  *    给某个方法和属性加上private, 该属性和方法只能在该类中使用，无法在实例化中使用和继承
@@ -177,6 +202,5 @@ class Dog extends Animal {
  */
 
 /**
- * 1、
- * 2、类中的属性和方法，默认都是public公开的，
+ * 在class中返回this,可以实现链式调用，和多态子类父类的连续调用
  */

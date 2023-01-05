@@ -72,3 +72,37 @@ type record = Record<"color" | "run", Obj>
 //   run: Obj;
 // }
 
+
+// 4、条件类型  T extends U ? X : Y 
+
+type TypeName<T> =
+  T extends string ? "string" :
+  T extends number ? "number" :
+  T extends boolean ? "boolean" :
+  T extends Function ? "function" : "object"
+
+type t1 = TypeName<string>   // type t1 = string
+type t2 = TypeName<number> // type t2 = "number"
+
+// 联合类型的条件类型
+// ( T | K ) extends U ? X : Y  ==> ( T extends U ? X : Y ) | ( K extends U ? X : Y )
+
+type t3 = TypeName<string | number[]>
+
+// 过滤第二个参数中包含的第一个参数中的类型
+type Diff<T, K> = T extends K ? never : T
+type t4 = Diff<"a" | "b" | "c", "a" | "e">  // "b" | "c"
+
+
+/**
+ * 1、Exclude<T,K> 过滤K中 包含 T 的类型
+ * 2、NonNullable<T> T中如果包含空类型，返回{}
+ * 3、Extract<T,K> 筛选K中 包含 T 的类型
+ * 4、ReturnType<F> 泛型T函数的返回值 作为类型
+ */
+
+type zz<T> = NonNullable<T>
+
+type lll = zz<string | number | unknown>
+
+type f = ReturnType<() => number>  // f : number
